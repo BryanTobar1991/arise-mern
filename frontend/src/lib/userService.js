@@ -27,3 +27,25 @@ export const updateProfile = async (data) => {
         throw error;
     }
 };
+
+export const fetchUserMetrics = async () => {
+    try {
+        const response = await api.get(`${USER_URL}/metrics`);
+        return response.data;
+    } catch (error) {
+        // En caso de error, puedes devolver un objeto vacío para no romper la UI
+        console.error("Error fetching user metrics:", error);
+        throw error; 
+    }
+};
+
+export const fetchHistoricalMetrics = async () => {
+    try {
+        // Llama a la nueva ruta /api/users/history
+        const response = await api.get(`${USER_URL}/history`);
+        return response.data.data; // Devolvemos solo el array de 'data'
+    } catch (error) {
+        console.error("Error fetching historical data:", error);
+        return [];
+    }
+};

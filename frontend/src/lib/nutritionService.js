@@ -32,6 +32,21 @@ export const createNutritionLog = async (data) => {
     }
 };
 
+
+/**
+ * ACTUALIZA un registro de nutrición existente.
+ * @param {string} id - ID del log a actualizar.
+ * @param {object} data - Datos del log a actualizar.
+ */
+export const updateNutritionLog = async (id, data) => {
+    try {
+        const response = await api.put(`${NUTRITION_URL}/${id}`, data);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};
+
 /**
  * Elimina un registro de nutrición por ID.
  * @param {string} id - ID del log a eliminar.

@@ -2,22 +2,9 @@
 
 import React, { useState, useEffect } from 'react';
 import ReminderCard from '../../components/reminders/ReminderCard';
-// Debes crear este modal o usar uno genérico
-// import CreateReminderModal from '../../components/modals/CreateReminderModal'; 
+import CreateReminderModal from '../../components/modals/CreateReminderModal'; 
 import { fetchReminders, updateReminder, deleteReminder } from '../../lib/reminderService';
 import { FaPlusCircle } from 'react-icons/fa';
-
-// Placeholder para el Modal (reemplazar con el componente real)
-const CreateReminderModal = ({ isOpen, onClose, onSuccess }) => (
-    <div className={`fixed inset-0 bg-slate-900 bg-opacity-75 flex items-center justify-center z-50 ${isOpen ? '' : 'hidden'}`}>
-        <div className="bg-slate-800 p-8 rounded-xl">
-            <h3 className="text-white">Formulario de Creación de Recordatorios</h3>
-            <p className="text-slate-400">¡Implementarás el formulario aquí!</p>
-            <button onClick={onClose} className="mt-4 px-4 py-2 bg-cyan-600 rounded">Cerrar</button>
-        </div>
-    </div>
-);
-
 
 export default function Reminders() {
     const [reminders, setReminders] = useState([]);

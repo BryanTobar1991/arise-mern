@@ -1,5 +1,8 @@
 import mongoose from "mongoose";
 
+// Definición de las opciones de recurrencia permitidas
+const RECURRENCE_TYPES = ['never', 'daily', 'weekly', 'monthly'];
+
 const reminderSchema = new mongoose.Schema(
   {
     // Asociación con el usuario autenticado (CRÍTICO para seguridad y CRUD)
@@ -8,19 +11,21 @@ const reminderSchema = new mongoose.Schema(
       ref: "User",
       required: true
     },
-    // Usamos 'title' en lugar de 'message' para consistencia con UI/otros modelos
     title: {
       type: String,
       required: true,
       trim: true
     },
-    // Añadir campo de descripción para detalles del recordatorio
-    description: String,   // Fecha y hora de vencimiento combinadas (crucial para la programación)
     dueAt: {
       type: Date,
       required: true
     },
-    // Estado de completado
+    recurrence: {
+      type: String,
+      enum: RECURRENCE_TYPES,
+      default: 'never'
+    },
+
     done: {
       type: Boolean,
       default: false

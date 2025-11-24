@@ -1,8 +1,6 @@
-// frontend/src/pages/Dashboard/Workouts.jsx
-
 import React, { useState, useEffect } from 'react';
 import WorkoutCard from '../../components/workouts/WorkoutCard';
-import CreateWorkoutModal from '../../components/modals/CreateWorkoutModal'; // Asumo que tienes este modal
+import CreateWorkoutModal from '../../components/modals/CreateWorkoutModal'; 
 import { fetchWorkouts, deleteWorkout } from '../../lib/workoutService';
 import { FaPlusCircle } from 'react-icons/fa';
 
@@ -11,6 +9,7 @@ export default function Workouts() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [editingWorkout, setEditingWorkout] = useState(null); 
 
     // 1. Carga inicial de datos
     const loadWorkouts = async () => {
@@ -30,13 +29,20 @@ export default function Workouts() {
         loadWorkouts();
     }, []);
 
-    // 2. Manejar la creación exitosa (recarga la lista)
-    const handleCreateSuccess = () => {
+    // 2. Manejar la creación/edición exitosa
+    const handleSuccess = () => {
         setIsModalOpen(false);
-        loadWorkouts(); // Recarga la lista para mostrar el nuevo entrenamiento/logro
+        setEditingWorkout(null); // Limpiar el estado de edición
+        loadWorkouts(); // Recargar la lista para mostrar los cambios
+    };
+    
+    // 3. Manejar la apertura para CREAR
+    const handleOpenCreateModal = () => {
+        setEditingWorkout(null); // Asegura que el modal esté en modo "Crear"
+        setIsModalOpen(true);
     };
 
-    // 3. Manejar la eliminación
+    // 4. Manejar la ELIMINACIÓN
     const handleDelete = async (id) => {
         if (!window.confirm("¿Estás seguro de que quieres eliminar este entrenamiento?")) return;
 
@@ -49,10 +55,10 @@ export default function Workouts() {
         }
     };
     
-    // NOTA: La función handleEdit abriría el modal en modo edición. Por ahora, solo es un placeholder.
+    // 5. Manejar la EDICIÓN
     const handleEdit = (workout) => {
-        alert(`Editar entrenamiento: ${workout.title}`);
-        // Aquí abrirías el modal con los datos del workout
+        setEditingWorkout(workout); // Establece el objeto que queremos editar
+        setIsModalOpen(true); // Abre el modal
     };
 
 
@@ -60,12 +66,15 @@ export default function Workouts() {
         return <div className="p-8 text-white">Cargando tus rutinas...</div>;
     }
 
+    const modalKey = editingWorkout ? editingWorkout._id : 'new-workout';
+
+    // El resto del componente de visualización sigue igual, excepto en el botón de Crear y el modal:
     return (
         <div className="p-8">
             <div className="flex justify-between items-center mb-10 border-b border-slate-700 pb-4">
                 <h2 className="text-3xl font-bold text-white">Gestión de Entrenamientos</h2>
                 <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleOpenCreateModal} // Usar la nueva función para crear
                     className="flex items-center gap-2 px-4 py-2 bg-cyan-600 hover:bg-cyan-500 rounded-lg text-sm font-medium transition shadow-md"
                 >
                     <FaPlusCircle /> Nuevo Registro
@@ -85,17 +94,19 @@ export default function Workouts() {
                             key={workout._id} 
                             workout={workout} 
                             onDelete={handleDelete}
-                            onEdit={handleEdit}
+                            onEdit={handleEdit} // <-- Ahora llama a la función real
                         />
                     ))}
                 </div>
             )}
 
-            {/* Modal de Creación */}
-            <CreateWorkoutModal 
+            {/* Modal multipropósito (Crear/Editar) */}
+            <CreateWorkoutModal
+                key={modalKey} 
                 isOpen={isModalOpen} 
                 onClose={() => setIsModalOpen(false)}
-                onSuccess={handleCreateSuccess}
+                onSuccess={handleSuccess} // Usar handleSuccess unificado
+                initialData={editingWorkout} // <-- Dato para el modo Edición
             />
         </div>
     );

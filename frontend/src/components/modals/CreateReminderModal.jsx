@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { createReminder } from '../../lib/reminderService';
-import { FaCalendarAlt, FaClock } from 'react-icons/fa';
+import { FaCalendarAlt, FaClock, FaRedoAlt } from 'react-icons/fa'; // Importar nuevo ícono
+
+// Opciones de Recurrencia
+const RECURRENCE_OPTIONS = [
+    { value: 'never', label: 'Nunca' },
+    { value: 'daily', label: 'Diario' },
+    { value: 'weekly', label: 'Semanal' },
+    { value: 'monthly', label: 'Mensual' },
+];
 
 // Obtener fecha y hora actual en formato local
 const getInitialDateTime = () => {
@@ -16,6 +24,7 @@ const initialFormState = {
     title: '',
     description: '',
     ...getInitialDateTime(),
+    recurrence: 'never', // NUEVO CAMPO: Valor inicial
 };
 
 export default function CreateReminderModal({ isOpen, onClose, onSuccess }) {
@@ -33,6 +42,13 @@ export default function CreateReminderModal({ isOpen, onClose, onSuccess }) {
         }));
     };
 
+    // Función para cerrar y resetear el estado
+    const handleClose = () => {
+        setForm(initialFormState);
+        setError(null);
+        onClose();
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
@@ -42,6 +58,12 @@ export default function CreateReminderModal({ isOpen, onClose, onSuccess }) {
         const dueAt = new Date(`${form.date}T${form.time}:00`);
         
         // Validación básica
+        if (!form.title) {
+            setError("El título es obligatorio.");
+            setLoading(false);
+            return;
+        }
+
         if (dueAt < new Date()) {
              setError("La fecha y hora del recordatorio no pueden ser en el pasado.");
              setLoading(false);
@@ -49,16 +71,16 @@ export default function CreateReminderModal({ isOpen, onClose, onSuccess }) {
         }
 
         try {
+            // Se envía el nuevo campo 'recurrence' al backend
             await createReminder({ 
                 title: form.title, 
                 description: form.description, 
-                dueAt // Formato ISO para el backend
+                dueAt, // Formato ISO para el backend
+                recurrence: form.recurrence // DATO DE RECURRENCIA
             }); 
             
-            // Esto activará el chequeo de logros en el backend (Logro "Iniciativa")
-            
             onSuccess();
-            setForm(initialFormState); // Resetear el formulario
+            handleClose(); // Usar la nueva función para cerrar y resetear
         } catch (err) {
             setError(err.response?.data?.error || 'Error al guardar el recordatorio.');
         } finally {
@@ -67,13 +89,15 @@ export default function CreateReminderModal({ isOpen, onClose, onSuccess }) {
     };
 
     return (
-        <div className="fixed inset-0 bg-slate-900 bg-opacity-75 flex items-center justify-center z-50">
-            <div className="bg-slate-800 p-8 rounded-xl w-full max-w-lg border border-slate-700 shadow-2xl">
+        <div className="fixed inset-0 bg-slate-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+             {/* Modal Content - Añadir responsive (max-w-lg en desktop, w-full en móvil) */}
+            <div className="bg-slate-800 p-6 sm:p-8 rounded-xl w-full max-w-lg border border-slate-700 shadow-2xl overflow-y-auto max-h-[90vh]">
                 <h3 className="text-2xl font-bold text-white mb-6">Configurar Recordatorio</h3>
                 
                 {error && <div className="p-3 mb-4 bg-rose-800 text-white rounded text-sm">{error}</div>}
 
                 <form onSubmit={handleSubmit}>
+                    {/* Título y Descripción (Mismos, no hay cambios) */}
                     <div className="mb-4">
                         <label className="block text-sm font-medium text-slate-400 mb-1">Título</label>
                         <input
@@ -99,8 +123,8 @@ export default function CreateReminderModal({ isOpen, onClose, onSuccess }) {
                         />
                     </div>
 
-                    {/* Fecha y Hora */}
-                    <div className="mb-6 grid grid-cols-2 gap-4">
+                    {/* Fecha y Hora (Mismos, diseño responsive) */}
+                    <div className="mb-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
                             <label className="block text-sm font-medium text-slate-400 mb-1">
                                 <FaCalendarAlt className="inline mr-1 text-cyan-400" /> Fecha
@@ -110,7 +134,7 @@ export default function CreateReminderModal({ isOpen, onClose, onSuccess }) {
                                 name="date"
                                 value={form.date}
                                 onChange={handleChange}
-                                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-700 focus:border-cyan-500"
+                                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-700 focus:border-cyan-500 appearance-none"
                                 required
                             />
                         </div>
@@ -123,17 +147,35 @@ export default function CreateReminderModal({ isOpen, onClose, onSuccess }) {
                                 name="time"
                                 value={form.time}
                                 onChange={handleChange}
-                                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-700 focus:border-cyan-500"
+                                className="w-full p-3 rounded bg-slate-700 text-white border border-slate-700 focus:border-cyan-500 appearance-none"
                                 required
                             />
                         </div>
                     </div>
+
+                    {/* NUEVO CAMPO: Recurrencia */}
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-slate-400 mb-1">
+                             <FaRedoAlt className="inline mr-1 text-cyan-400" /> Recurrencia
+                        </label>
+                        <select
+                            name="recurrence"
+                            value={form.recurrence}
+                            onChange={handleChange}
+                            className="w-full p-3 rounded bg-slate-700 text-white border border-slate-700 focus:border-cyan-500"
+                        >
+                            {RECURRENCE_OPTIONS.map(option => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                            ))}
+                        </select>
+                         <p className="mt-1 text-xs text-slate-500">Define si este recordatorio se repetirá automáticamente.</p>
+                    </div>
                     
                     {/* Botones de acción */}
-                    <div className="flex justify-end space-x-3">
+                    <div className="flex justify-end space-x-3 pt-4 border-t border-slate-700/50">
                         <button
                             type="button"
-                            onClick={onClose}
+                            onClick={handleClose}
                             className="px-4 py-2 text-sm font-medium text-slate-300 hover:text-white transition"
                             disabled={loading}
                         >

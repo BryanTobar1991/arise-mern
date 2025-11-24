@@ -39,3 +39,12 @@ export const deleteWorkout = async (id) => {
         throw error;
     }
 };
+
+export const updateWorkout = async (id, data) => {
+    try {
+        const response = await api.put(`${WORKOUT_URL}/${id}`, data);
+        return response.data;
+    } catch (error) {
+        throw error;
+    }
+};

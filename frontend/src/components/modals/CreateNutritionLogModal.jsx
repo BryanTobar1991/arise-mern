@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
-import { createNutritionLog } from '../../lib/nutritionService';
+import React, { useState, useEffect } from 'react'; // Importar useEffect
+import { createNutritionLog, updateNutritionLog } from '../../lib/nutritionService'; // Importar updateNutritionLog
+import { FaSave, FaUtensils } from 'react-icons/fa'; // Importar FaUtensils
 
-const initialState = {
-    date: new Date().toISOString().substring(0, 10), // Fecha actual YYYY-MM-DD
+const getInitialDate = () => new Date().toISOString().substring(0, 10);
+
+const initialFormState = {
+    date: getInitialDate(),
     calories: 0,
     protein: 0,
     carbs: 0,
@@ -10,18 +13,46 @@ const initialState = {
     notes: '',
 };
 
-export default function CreateNutritionLogModal({ isOpen, onClose, onSuccess }) {
+// Función auxiliar para mapear los datos iniciales (similar a la corrección del Workout)
+const mapInitialData = (data) => ({
+    // Asegurar que la fecha esté en formato YYYY-MM-DD para el input
+    date: data.date ? new Date(data.date).toISOString().substring(0, 10) : getInitialDate(),
+    // Los campos numéricos deben asegurarse de ser números, no strings vacías
+    calories: data.calories || 0,
+    protein: data.protein || 0,
+    carbs: data.carbs || 0,
+    fats: data.fats || 0,
+    notes: data.notes || '',
+});
+
+
+// Aceptamos 'initialData' para el modo edición
+export default function CreateNutritionLogModal({ isOpen, onClose, onSuccess, initialData }) {
     if (!isOpen) return null;
 
-    const [form, setForm] = useState(initialState);
+    const isEditing = !!initialData;
+
+    // Estado local para el formulario
+    const [form, setForm] = useState(initialFormState);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    // Lógica de inicialización/reseteo (ejecutada cuando initialData cambia o al cerrar/abrir)
+    useEffect(() => {
+        setForm(initialData ? mapInitialData(initialData) : initialFormState);
+        setError(null);
+    }, [initialData]);
+    // El 'useState' inicializa al montar, el 'useEffect' re-inicializa al cambiar 'initialData'
+
     const handleChange = (e) => {
         const { name, value, type } = e.target;
+        
+        // CORRECCIÓN: Si el valor numérico es vacío, establecemos 0, sino Mongoose falla.
+        const cleanedValue = type === 'number' && value === '' ? 0 : value;
+
         setForm(prev => ({
             ...prev,
-            [name]: type === 'number' ? Number(value) : value,
+            [name]: type === 'number' ? Number(cleanedValue) : cleanedValue,
         }));
     };
 
@@ -30,25 +61,46 @@ export default function CreateNutritionLogModal({ isOpen, onClose, onSuccess }) 
         setLoading(true);
         setError(null);
         
-        // Validación básica
-        if (form.calories <= 0 || form.protein < 0 || form.carbs < 0 || form.fats < 0) {
-            setError("Los valores de calorías y macros deben ser válidos.");
+        // Datos limpios a enviar al backend
+        const dataToSend = {
+            ...form,
+            // Convertir explícitamente a Number si quedaron strings, aunque handleChange lo hace
+            calories: Number(form.calories),
+            protein: Number(form.protein),
+            carbs: Number(form.carbs),
+            fats: Number(form.fats),
+        };
+        
+        // Validación básica (mejorada)
+        if (dataToSend.calories <= 0 || dataToSend.protein < 0 || dataToSend.carbs < 0 || dataToSend.fats < 0) {
+            setError("Las calorías deben ser positivas, y los macros no pueden ser negativos.");
             setLoading(false);
             return;
         }
 
         try {
-            await createNutritionLog(form);
-            onSuccess(); // Esto activará el chequeo de logros en el backend
-            setForm(initialState); // Resetear el formulario
+            if (isEditing) {
+                // Modo Edición: Llamar a la función de actualización
+                await updateNutritionLog(initialData._id, dataToSend);
+            } else {
+                // Modo Creación: Llamar a la función de creación
+                await createNutritionLog(dataToSend);
+            }
+            
+            onSuccess(); // Recarga los datos en la vista principal
+            // No resetear el formulario aquí, se hace por el useEffect al cambiar el estado de la página
         } catch (err) {
-            setError(err.response?.data?.error || 'Error al guardar el registro nutricional.');
+            setError(err.response?.data?.error || `Error al ${isEditing ? 'actualizar' : 'guardar'} el registro.`);
         } finally {
             setLoading(false);
         }
     };
 
-    // Componente auxiliar para el input de números
+    const modalTitle = isEditing ? 'Editar Registro Nutricional' : 'Nuevo Registro Nutricional';
+    const buttonText = isEditing ? 'Guardar Cambios' : 'Guardar Registro';
+
+
+    // Componente auxiliar para el input de números (sin cambios, usa form)
     const NumberInput = ({ name, label, color }) => (
         <div>
             <label className="block text-xs font-medium text-slate-400 mb-1">{label} (g)</label>
@@ -65,9 +117,11 @@ export default function CreateNutritionLogModal({ isOpen, onClose, onSuccess }) 
     );
 
     return (
-        <div className="fixed inset-0 bg-slate-900 bg-opacity-75 flex items-center justify-center z-50">
-            <div className="bg-slate-800 p-8 rounded-xl w-full max-w-2xl border border-slate-700 shadow-2xl">
-                <h3 className="text-2xl font-bold text-white mb-6">Nuevo Registro Nutricional</h3>
+        <div className="fixed inset-0 bg-slate-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+            <div className="bg-slate-800 p-6 sm:p-8 rounded-xl w-full max-w-2xl border border-slate-700 shadow-2xl">
+                <h3 className="text-2xl font-bold text-white mb-6 flex items-center gap-2">
+                    <FaUtensils className="text-emerald-400"/> {modalTitle}
+                </h3>
                 
                 {error && <div className="p-3 mb-4 bg-rose-800 text-white rounded text-sm">{error}</div>}
 
@@ -134,7 +188,7 @@ export default function CreateNutritionLogModal({ isOpen, onClose, onSuccess }) 
                             className="px-6 py-2 text-sm font-medium bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg transition disabled:opacity-50"
                             disabled={loading}
                         >
-                            {loading ? 'Guardando...' : 'Guardar Registro'}
+                            <FaSave className="inline mr-1" /> {loading ? 'Procesando...' : buttonText}
                         </button>
                     </div>
                 </form>
