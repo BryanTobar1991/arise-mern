@@ -1,9 +1,28 @@
+import React, { useState, useEffect } from 'react';
 import ProgressCharts from "../../components/charts/ProgressCharts";
-
-
-
+import { fetchAISuggestion } from '../../lib/suggestionService';
 
 export default function Index() {
+  const [aiSuggestion, setAiSuggestion] = useState(null);
+  const [loadingSuggestion, setLoadingSuggestion] = useState(true);
+
+  useEffect(() => {
+        const loadSuggestion = async () => {
+            setLoadingSuggestion(true);
+            try {
+                const suggestion = await fetchAISuggestion();
+                setAiSuggestion(suggestion);
+            } catch (error) {
+                // Si falla la API (ej: error 500, o problema del interceptor), el servicio ya devuelve un fallback
+                setAiSuggestion("No pudimos obtener una recomendación en este momento.");
+            } finally {
+                setLoadingSuggestion(false);
+            }
+        };
+
+        loadSuggestion();
+    }, []);
+
   return (
     <div className="space-y-10 animate-fade">
 
@@ -12,6 +31,16 @@ export default function Index() {
         Tu progreso general
       </h1>
 
+    <div className="p-6 bg-slate-800 border border-indigo-700 rounded-2xl shadow-xl shadow-indigo-500/10">
+        <h2 className="text-sm font-semibold text-indigo-400 mb-2 flex items-center gap-2">
+            🧠 Sugerencia Inteligente ARISE
+            {loadingSuggestion && <span className="text-xs text-slate-500">(Analizando...)</span>}
+        </h2>
+        <p className="text-lg text-white">
+            {aiSuggestion || (loadingSuggestion ? "Cargando el análisis de tus hábitos..." : "No hay sugerencias.")}
+        </p>
+      </div>
+      
       {/* GRID DE ESTADÍSTICAS */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
 

@@ -6,6 +6,10 @@ import { connectDB } from "./config/db.js";
 
 import authRoutes from "./routes/auth.routes.js";
 import workoutRoutes from "./routes/workout.routes.js";
+import achievementRoutes from './routes/achievement.routes.js';
+import userRoutes from './routes/user.routes.js';
+import nutritionRoutes from './routes/nutrition.routes.js'; 
+import reminderRoutes from './routes/reminder.routes.js';
 
 const app = express();
 
@@ -19,8 +23,14 @@ app.use(
   })
 );
 
+
+
 app.use("/api/auth", authRoutes);
 app.use("/api/workouts", workoutRoutes);
+app.use('/api/achievements', achievementRoutes);
+app.use('/api/nutrition', nutritionRoutes); 
+app.use('/api/reminders', reminderRoutes);
+app.use('/api/users', userRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ ok: true });

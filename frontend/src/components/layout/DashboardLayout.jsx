@@ -8,6 +8,7 @@ import {
   FiCoffee,
   FiBell,
   FiUser,
+  FiStar,
 } from "react-icons/fi";
 
 export default function DashboardLayout() {
@@ -77,6 +78,15 @@ export default function DashboardLayout() {
             }
           >
             <FiUser /> Perfil
+          </NavLink>
+          <NavLink
+            to="/dashboard/achievements"
+            className={({ isActive }) =>
+              `flex items-center gap-3 p-3 rounded-lg transition 
+              ${isActive ? "bg-cyan-500/20 text-cyan-400" : "hover:bg-slate-800"}`
+            }
+          >
+            <FiStar /> Logros
           </NavLink>
         </nav>
 

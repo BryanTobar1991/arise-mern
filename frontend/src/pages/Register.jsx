@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useAuth } from "../context/AuthContext";
 
 export default function Register() {
   const navigate = useNavigate();
+  const { register, error: authError, loading: authLoading } = useAuth();
 
   const [form, setForm] = useState({
     name: "",
@@ -11,24 +12,29 @@ export default function Register() {
     password: "",
   });
 
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+
   function handleChange(e) {
     setForm({ ...form, [e.target.name]: e.target.value });
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
+    setError(null);
+    setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/register", form);
+      const success = await register(form.name, form.email, form.password);
 
-      console.log("Usuario creado:", res.data);
+      if (success){
+        navigate("/login");
+      }
 
-      // 👇 REDIRECCIÓN CORRECTA
-      navigate("/login");
-
-    } catch (error) {
-      console.error("Error al registrar:", error.response?.data || error.message);
-      alert(error.response?.data?.error || "Error al registrar");
+    } catch (err) {
+      console.error("Error al registrar:", err);
+    } finally{
+      setLoading(false);
     }
   }
 
@@ -36,6 +42,12 @@ export default function Register() {
     <div className="min-h-screen flex items-center justify-center bg-black">
       <div className="bg-neutral-900 p-8 rounded-xl shadow-xl w-full max-w-md">
         <h1 className="text-3xl font-bold text-white mb-6">Crear cuenta</h1>
+
+        {(authError || error) && (
+            <div className="mb-4 p-3 bg-red-800 text-white rounded text-sm">
+                {authError || error}
+            </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
 
@@ -65,9 +77,10 @@ export default function Register() {
 
           <button
             type="submit"
+            disabled={loading || authLoading}
             className="w-full bg-rose-600 hover:bg-rose-700 p-3 rounded text-white font-bold"
           >
-            Registrarme
+            {loading || authLoading ? "Registrando..." : "Registrarme"}
           </button>
         </form>
 
