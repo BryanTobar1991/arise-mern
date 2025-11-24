@@ -1,45 +1,29 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
 import { useAuth } from "../context/AuthContext";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { login } = useAuth(); // ⬅️ función del contexto Auth
+  const { login, user: authUser, error: authError, loading: authLoading } = useAuth();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
-
   async function handleSubmit(e) {
     e.preventDefault();
-    setError("");
-    setLoading(true);
 
     try {
-      const res = await axios.post("http://localhost:5000/api/auth/login", {
-        email,
-        password,
-      });
+      const success = await login(email, password);
 
-      // Guardar usuario en global context
-      login(res.data);
-
-      // Redirigir al dashboard
-      navigate("/dashboard");
+      if (success) {
+        navigate("/dashboard");
+      }
 
     } catch (err) {
-      console.error(err);
-      if (err.response?.data?.error === "Credenciales inválidas") {
-        setError("Correo o contraseña incorrectos.");
-      } else {
-        setError("Error al iniciar sesión.");
-      }
-    } finally {
-      setLoading(false);
+
+      console.error("Error capturado en el componente:", err);
     }
+
   }
 
   return (
@@ -55,9 +39,9 @@ export default function Login() {
         <h1 className="text-3xl font-extrabold tracking-tight mb-2">Iniciar sesión</h1>
         <p className="text-sm text-slate-400 mb-6">Bienvenido de vuelta a ARISE.</p>
 
-        {error && (
+        {authError && (
           <div className="mb-4 rounded-xl border border-rose-500/60 bg-rose-500/10 px-3 py-2 text-sm text-rose-200 animate-fade">
-            {error}
+            {authError}
           </div>
         )}
 
@@ -89,10 +73,10 @@ export default function Login() {
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={authLoading}
             className="w-full mt-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 disabled:bg-slate-700 disabled:text-slate-400 py-2.5 text-sm font-semibold tracking-wide transition"
           >
-            {loading ? "Ingresando..." : "Iniciar sesión"}
+            {authLoading ? "Ingresando..." : "Iniciar sesión"}
           </button>
         </form>
 

@@ -5,8 +5,24 @@ const userSchema = new mongoose.Schema(
   {
     name: { type: String, required: true, trim: true },
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
-    password: { type: String, required: true, minlength: 6 }
+    password: { type: String, required: true, minlength: 6 },
+
+    achievements: [
+        {
+            achievementId: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'Achievement', // Referencia al nuevo modelo
+            },
+            // Momento en que se desbloqueó el logro
+            unlockedAt: {
+                type: Date,
+                default: Date.now,
+            }
+        }
+    ],
+    
   },
+
   { timestamps: true }
 );
 
