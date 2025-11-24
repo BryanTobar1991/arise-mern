@@ -7,20 +7,29 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true, lowercase: true, trim: true },
     password: { type: String, required: true, minlength: 6 },
 
+    // NUEVO CAMPO: Peso
+    weight: {
+      type: Number,
+      min: 30, // Peso mínimo razonable
+      max: 500, // Peso máximo razonable
+      default: null, // Si no se establece, es nulo (no registrado)
+      required: false
+    },
+
     achievements: [
-        {
-            achievementId: {
-                type: mongoose.Schema.Types.ObjectId,
-                ref: 'Achievement', // Referencia al nuevo modelo
-            },
-            // Momento en que se desbloqueó el logro
-            unlockedAt: {
-                type: Date,
-                default: Date.now,
-            }
+      {
+        achievementId: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: 'Achievement',
+        },
+        // Momento en que se desbloqueó el logro
+        unlockedAt: {
+          type: Date,
+          default: Date.now,
         }
+      }
     ],
-    
+
   },
 
   { timestamps: true }

@@ -34,7 +34,7 @@ export const createReminder = async (data) => {
  */
 export const updateReminder = async (id, data) => {
     try {
-        const response = await api.put(`${REMINDER_URL}/${id}/done`, data); // Usamos PUT/PATCH en /:id/done
+        const response = await api.patch(`${REMINDER_URL}/${id}/done`, data); // Usamos PUT/PATCH en /:id/done
         return response.data;
     } catch (error) {
         throw error;

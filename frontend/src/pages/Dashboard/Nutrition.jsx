@@ -9,6 +9,9 @@ export default function Nutrition() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    
+    // NUEVO ESTADO: Almacena el log a editar
+    const [editingLog, setEditingLog] = useState(null); 
 
     // 1. Carga inicial de datos
     const loadLogs = async () => {
@@ -28,13 +31,21 @@ export default function Nutrition() {
         loadLogs();
     }, []);
 
-    // 2. Manejar la creación exitosa (recarga la lista)
-    const handleCreateSuccess = () => {
+    // 2. Manejar la creación/edición exitosa (recarga la lista)
+    const handleSuccess = () => {
         setIsModalOpen(false);
-        loadLogs(); // Recarga la lista para mostrar el nuevo log/activar logros
+        setEditingLog(null); // Limpiar el estado de edición al cerrar
+        loadLogs(); // Recarga la lista para mostrar los cambios
+    };
+    
+    // 3. Manejar la apertura para CREAR
+    const handleOpenCreateModal = () => {
+        setEditingLog(null); // Asegura el modo "Creación"
+        setIsModalOpen(true);
     };
 
-    // 3. Manejar la eliminación
+
+    // 4. Manejar la eliminación
     const handleDelete = async (id) => {
         if (!window.confirm("¿Estás seguro de que quieres eliminar este registro nutricional?")) return;
 
@@ -47,23 +58,25 @@ export default function Nutrition() {
         }
     };
     
-    // Placeholder para edición
+    // 5. IMPLEMENTACIÓN REAL DE EDICIÓN
     const handleEdit = (log) => {
-        alert(`Editar log de fecha: ${log.date}`);
-        // Aquí implementarías la apertura del modal en modo edición
+        setEditingLog(log); // Establece el objeto que queremos editar
+        setIsModalOpen(true); // Abre el modal
     };
-
 
     if (loading) {
         return <div className="p-8 text-white">Cargando tus registros nutricionales...</div>;
     }
+
+    // Key dinámica para forzar el reinicio del modal (Modo Edición o Creación)
+    const modalKey = editingLog ? editingLog._id : 'new-nutrition-log'; 
 
     return (
         <div className="p-8">
             <div className="flex justify-between items-center mb-10 border-b border-slate-700 pb-4">
                 <h2 className="text-3xl font-bold text-white">Diario Nutricional</h2>
                 <button
-                    onClick={() => setIsModalOpen(true)}
+                    onClick={handleOpenCreateModal} // Llama al handler de creación
                     className="flex items-center gap-2 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 rounded-lg text-sm font-medium transition shadow-md"
                 >
                     <FaPlusCircle /> Nuevo Registro
@@ -83,17 +96,19 @@ export default function Nutrition() {
                             key={log._id} 
                             log={log} 
                             onDelete={handleDelete}
-                            onEdit={handleEdit}
+                            onEdit={handleEdit} // <--- Ahora llama al handler real
                         />
                     ))}
                 </div>
             )}
 
-            {/* Modal de Creación */}
+            {/* Modal multipropósito (Crear/Editar) */}
             <CreateNutritionLogModal
+                key={modalKey} // Forzar el desmontaje para evitar errores de estado internos (Paso 43)
                 isOpen={isModalOpen} 
-                onClose={() => setIsModalOpen(false)}
-                onSuccess={handleCreateSuccess}
+                onClose={() => {setIsModalOpen(false); setEditingLog(null);}} // Limpiar estado al cerrar
+                onSuccess={handleSuccess}
+                initialData={editingLog} // <--- Dato para el modo Edición
             />
         </div>
     );

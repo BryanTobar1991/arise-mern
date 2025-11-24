@@ -10,6 +10,7 @@ import achievementRoutes from './routes/achievement.routes.js';
 import userRoutes from './routes/user.routes.js';
 import nutritionRoutes from './routes/nutrition.routes.js'; 
 import reminderRoutes from './routes/reminder.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 
 const app = express();
 
@@ -31,6 +32,7 @@ app.use('/api/achievements', achievementRoutes);
 app.use('/api/nutrition', nutritionRoutes); 
 app.use('/api/reminders', reminderRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ ok: true });

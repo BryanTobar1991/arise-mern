@@ -13,6 +13,7 @@ import Nutrition from "./pages/Dashboard/Nutrition";
 import Reminders from "./pages/Dashboard/Reminders";
 import Profile from "./pages/Dashboard/Profile";
 import Achievements from "./pages/Dashboard/Achievements";
+import Notifications from "./pages/Dashboard/Notifications";
 
 // RUTA PROTEGIDA
 function PrivateRoute({ children }) {
@@ -42,6 +43,7 @@ export default function App() {
         <Route path="reminders" element={<Reminders />} />
         <Route path="profile" element={<Profile />} />
         <Route path="achievements" element={<Achievements />} />
+        <Route path="/dashboard/notifications" element={<Notifications />} />
       </Route>
 
       {/* Por defecto */}
